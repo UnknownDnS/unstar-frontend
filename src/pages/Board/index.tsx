@@ -4,18 +4,21 @@ import { BoardInputContainer, BoardInputModal, ModalFooter, ModalHeader } from '
 import useInput from '../../hooks/useInput';
 import { AiOutlineCloseCircle } from 'react-icons/ai';
 import { PrimaryBtn, ErrorBtn, ModalForm } from 'common/styles';
+import useSWR from 'swr';
+import fetcher from '../../utils/fetcher';
+import { get, post } from '../../utils/axiosUtil';
+import { API_GET_BOARD, API_POST_BOARD } from 'const/api';
 
 const Board = () => {
-  const test = [
-    { title: '테스트 제목', author: 'sub1', body: '테스트테스트', totalComments: 3, createdAt: '2021.08.17' },
-    { title: '테스트 제목', author: 'sub1', body: '테스트테스트', totalComments: 3, createdAt: '2021.08.17' },
-    { title: '테스트 제목', author: 'sub1', body: '테스트테스트', totalComments: 3, createdAt: '2021.08.17' },
-    { title: '테스트 제목2', author: 'sub2', body: '테스트테스트테스트테스트', totalComments: 4, createdAt: '2021.08.16' },
-    { title: '테스트 제목3', author: 'sub3', body: '테스트테스트테스트테스트테스트테스트', totalComments: 5, createdAt: '2021.08.15' },
-  ];
-
   const [boardInputToggle, setBoardInputToggle] = useState(false);
-  const [boardText, onChangeBoardText, setBoardText] = useInput('');
+  const [content, onChangeContent, setContent] = useInput('');
+  const [title, onChangeTitle, setTitle] = useInput('');
+  const { data, error, revalidate, mutate } = useSWR(API_GET_BOARD, get, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+  });
+  console.log(data);
+  const boards = data?.response;
 
   const onClickBoardInputToggle = useCallback(() => {
     setBoardInputToggle(!boardInputToggle);
@@ -24,14 +27,22 @@ const Board = () => {
   const onSubmitBoard = useCallback(
     (e) => {
       e.preventDefault();
-      console.log(boardText);
+      console.log(content);
+      const param = {
+        author: 'sub',
+        title: title,
+        content: content,
+      };
+      post(API_POST_BOARD, param).then((response) => {
+        setBoardInputToggle(false);
+        setTitle('');
+        setContent('');
+        revalidate();
+      });
     },
-    [boardText],
+    [content, title],
   );
 
-  const children = test.map((e, index) => (
-    <BoardChild title={e.title} author={e.author} body={e.body} totalComments={e.totalComments} createdAt={e.createdAt} key={index} />
-  ));
   return (
     <div>
       {boardInputToggle && (
@@ -41,11 +52,12 @@ const Board = () => {
               <span>게시글 쓰기</span>
               <AiOutlineCloseCircle />
             </ModalHeader>
+            <input type="text" id="title" name="title" placeholder="제목" autoComplete="off" value={title} onChange={onChangeTitle} />
             <textarea
               id="textArea"
-              value={boardText}
+              value={content}
               onChange={(e) => {
-                setBoardText(e.target.value);
+                setContent(e.target.value);
               }}
             />
             <ModalFooter>
@@ -59,7 +71,9 @@ const Board = () => {
       <BoardInputContainer>
         <PrimaryBtn onClick={onClickBoardInputToggle}>글쓰기</PrimaryBtn>
       </BoardInputContainer>
-      {children}
+      {boards?.map((e: any) => (
+        <BoardChild key={e.id} title={e.title} author={e.author} body={e.content} totalComments={e.totalComments} createdAt={e.createdAt} />
+      ))}
     </div>
   );
 };

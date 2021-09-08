@@ -2,7 +2,6 @@ import React from 'react';
 import './App.css';
 import loadable from '@loadable/component';
 import { Switch, Route, Redirect } from 'react-router-dom';
-import { Reset } from 'styled-reset';
 
 const Main = loadable(() => import('layouts/Main'));
 const SignUp = loadable(() => import('pages/SignUp'));

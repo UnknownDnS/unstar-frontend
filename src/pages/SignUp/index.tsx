@@ -4,6 +4,8 @@ import unknownLogo from '../../images/unknown-logo.jpg';
 import { Link } from 'react-router-dom';
 import useInput from '../../hooks/useInput';
 import { PROJECT_NAME } from 'const';
+import { post } from 'utils/axiosUtil';
+import { API_SIGNUP } from 'const/api';
 
 const SignUp = () => {
   const [userId, onChangeUserId] = useInput('');
@@ -17,6 +19,18 @@ const SignUp = () => {
     (e) => {
       e.preventDefault();
       console.log(userId, name, password, passwordCheck);
+      const param = {
+        userName: userId,
+        userPw: password,
+        nickName: name,
+      };
+      post(API_SIGNUP, param).then((res) => {
+        if (res.code === 200) {
+          window.location.href = 'http://localhost:3000/login';
+        } else {
+          console.log('회원가입 실패');
+        }
+      });
     },
     [userId, name, password, passwordCheck],
   );
