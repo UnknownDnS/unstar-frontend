@@ -5,20 +5,23 @@ import useInput from '../../hooks/useInput';
 import { AiOutlineCloseCircle } from 'react-icons/ai';
 import { PrimaryBtn, ErrorBtn, ModalForm } from 'common/styles';
 import useSWR from 'swr';
-import fetcher from '../../utils/fetcher';
-import { get, post } from '../../utils/axiosUtil';
-import { API_GET_BOARD, API_POST_BOARD } from 'const/api';
+import { get, getWithAuth, post } from '../../utils/axiosUtil';
+import { API_GET_BOARD, API_GET_USER, API_POST_BOARD } from 'const/api';
+import { Redirect } from 'react-router-dom';
 
 const Board = () => {
+  const { data: userInfo, error, revalidate, mutate } = useSWR(API_GET_USER, getWithAuth);
   const [boardInputToggle, setBoardInputToggle] = useState(false);
   const [content, onChangeContent, setContent] = useInput('');
   const [title, onChangeTitle, setTitle] = useInput('');
-  const { data, error, revalidate, mutate } = useSWR(API_GET_BOARD, get, {
+  const {
+    data: boards,
+    error: boardError,
+    revalidate: boardRevalidate,
+  } = useSWR(API_GET_BOARD, get, {
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
   });
-  console.log(data);
-  const boards = data?.response;
 
   const onClickBoardInputToggle = useCallback(() => {
     setBoardInputToggle(!boardInputToggle);
@@ -27,9 +30,8 @@ const Board = () => {
   const onSubmitBoard = useCallback(
     (e) => {
       e.preventDefault();
-      console.log(content);
       const param = {
-        author: 'sub',
+        author: userInfo.nickName,
         title: title,
         content: content,
       };
@@ -37,11 +39,14 @@ const Board = () => {
         setBoardInputToggle(false);
         setTitle('');
         setContent('');
-        revalidate();
+        boardRevalidate();
       });
     },
     [content, title],
   );
+  if (!userInfo) {
+    return <Redirect to="/login" />;
+  }
 
   return (
     <div>
@@ -71,8 +76,8 @@ const Board = () => {
       <BoardInputContainer>
         <PrimaryBtn onClick={onClickBoardInputToggle}>글쓰기</PrimaryBtn>
       </BoardInputContainer>
-      {boards?.map((e: any) => (
-        <BoardChild key={e.id} title={e.title} author={e.author} body={e.content} totalComments={e.totalComments} createdAt={e.createdAt} />
+      {boards?.map((b: any) => (
+        <BoardChild key={b.id} title={b.title} author={b.author} body={b.content} totalComments={b.totalComments} createdAt={b.createdAt} />
       ))}
     </div>
   );

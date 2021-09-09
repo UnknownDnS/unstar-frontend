@@ -32,7 +32,28 @@ export const get = (url: string) =>
   axios({
     method: 'GET',
     url: url,
+    /*    headers: {
+      Authorization: `Bearer ${cookies.get(COOKIE_NAME)}`,
+    },*/
+  }).then((response) => {
+    if (response.data.code === 200) {
+      return response.data.response;
+    } else {
+      throw new Error(response.data.errorMsg);
+    }
+  });
+
+export const getWithAuth = (url: string) =>
+  axios({
+    method: 'GET',
+    url: url,
     headers: {
       Authorization: `Bearer ${cookies.get(COOKIE_NAME)}`,
     },
-  }).then((response) => response.data);
+  }).then((response) => {
+    if (response.data.code === 200) {
+      return response.data.response;
+    } else {
+      throw new Error(response.data.errorMsg);
+    }
+  });

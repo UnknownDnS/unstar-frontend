@@ -1,18 +1,16 @@
 import React, { useCallback, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
 import useInput from 'hooks/useInput';
 import { LoginButton, LoginFooter, LoginForm, LoginHeader, LoginContainer, ErrorMsg } from './styles';
 import unknownLogo from 'images/unknown-logo.jpg';
 import { API_LOGIN, API_GET_USER } from 'const/api';
-import { post, get } from 'utils/axiosUtil';
+import { post, get, getWithAuth } from 'utils/axiosUtil';
 import { COOKIE_EXPIRED_TIME, PROJECT_NAME, COOKIE_NAME } from 'const';
 import Cookies from 'universal-cookie';
 import useSWR from 'swr';
-import fetcher from '../../utils/fetcher';
-import axios from 'axios';
 
 const LogIn = () => {
-  //const { data, error, revalidate, mutate } = useSWR(API_GET_USER + 'sub', fetcher);
+  const { data: userInfo, error, revalidate, mutate } = useSWR(API_GET_USER, getWithAuth);
   const [userId, onChangeUserId] = useInput('');
   const [password, onChangePassword] = useInput('');
   const [loginError, setLoginError] = useState(false);
@@ -38,6 +36,10 @@ const LogIn = () => {
     },
     [userId, password],
   );
+
+  if (userInfo) {
+    return <Redirect to="/board" />;
+  }
 
   return (
     <LoginContainer>

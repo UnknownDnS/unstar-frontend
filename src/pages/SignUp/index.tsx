@@ -1,13 +1,15 @@
 import React, { useCallback, useState } from 'react';
 import { LoginButton, ErrorMsg, LoginFooter, LoginForm, LoginHeader, LoginContainer } from 'pages/LogIn/styles';
 import unknownLogo from '../../images/unknown-logo.jpg';
-import { Link } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
 import useInput from '../../hooks/useInput';
 import { PROJECT_NAME } from 'const';
-import { post } from 'utils/axiosUtil';
-import { API_SIGNUP } from 'const/api';
+import { get, getWithAuth, post } from 'utils/axiosUtil';
+import { API_GET_USER, API_SIGNUP } from 'const/api';
+import useSWR from 'swr';
 
 const SignUp = () => {
+  const { data: userInfo, error, revalidate, mutate } = useSWR(API_GET_USER, getWithAuth);
   const [userId, onChangeUserId] = useInput('');
   const [name, onChangeName] = useInput('');
   const [password, , setPassword] = useInput('');
@@ -50,6 +52,10 @@ const SignUp = () => {
     },
     [password],
   );
+
+  if (userInfo) {
+    return <Redirect to="/board" />;
+  }
 
   return (
     <LoginContainer>
