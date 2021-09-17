@@ -5,3 +5,5 @@ export const API_GET_USER = 'api/user';
 
 export const API_GET_BOARD = 'api/board';
 export const API_POST_BOARD = 'api/board';
+
+export const API_POST_COMMENT = 'api/comment';

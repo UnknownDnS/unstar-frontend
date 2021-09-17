@@ -3,8 +3,12 @@ import { BoardChildBody, BoardChildContainer, BoardChildFooter, BoardChildHeader
 import Comment from 'components/Comment';
 import useInput from 'hooks/useInput';
 import { Button, Input } from 'common/styles';
+import useSWR from 'swr';
+import { API_GET_BOARD, API_POST_BOARD, API_POST_COMMENT } from '../../const/api';
+import { get, post } from '../../utils/axiosUtil';
 
 interface Props {
+  id: number;
   title: string;
   author: string;
   body: string;
@@ -12,26 +16,40 @@ interface Props {
   createdAt: string;
 }
 
-const BoardChild: VFC<Props> = ({ title, author, body, totalComments, createdAt }) => {
+const BoardChild: VFC<Props> = ({ id, title, author, body, totalComments, createdAt }) => {
   const [commentToggle, setCommentToggle] = useState(false);
-  const [comment, onChangeComment, setComment] = useInput('');
-  const testComments = [
-    { author: 'sub1', body: 'hello!', createdAt: '2021.08.17' },
-    { author: 'sub2', body: 'hello!!', createdAt: '2021.08.16' },
-    { author: 'sub3', body: 'hello!!!', createdAt: '2021.08.15' },
-  ];
+  const [content, onChangeContent, setContent] = useInput('');
+  const {
+    data: comments,
+    error: commentError,
+    revalidate: commentRevalidate,
+  } = useSWR(API_GET_BOARD + '/' + id + '/comment', get, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 60 * 1000,
+  });
 
   const onClickCommentContainerToggle = useCallback(() => {
     setCommentToggle(!commentToggle);
+    commentRevalidate();
   }, [commentToggle]);
 
   const onSubmitComment = useCallback(
     (e) => {
       e.preventDefault();
-      console.log(comment);
-      setComment('');
+      console.log(content);
+      const param = {
+        boardId: id,
+        author: author,
+        content: content,
+      };
+      post(API_POST_COMMENT, param).then((response) => {
+        setContent('');
+        commentRevalidate();
+        setContent('');
+      });
     },
-    [comment],
+    [content],
   );
 
   return (
@@ -47,8 +65,8 @@ const BoardChild: VFC<Props> = ({ title, author, body, totalComments, createdAt 
       </BoardChildFooter>
       {commentToggle && (
         <CommentsWrapper>
-          {testComments.map((t, index) => (
-            <Comment author={t.author} body={t.body} createdAt={t.createdAt} key={index} />
+          {comments?.map((c: any) => (
+            <Comment key={c.id} author={c.author} body={c.content} createdAt={c.createdAt} />
           ))}
 
           <form onSubmit={onSubmitComment}>
@@ -58,8 +76,8 @@ const BoardChild: VFC<Props> = ({ title, author, body, totalComments, createdAt 
               name="comment"
               placeholder="댓글을 입력하세요."
               autoComplete="off"
-              value={comment}
-              onChange={onChangeComment}
+              value={content}
+              onChange={onChangeContent}
             />
             <Button style={{ width: '100px', margin: '15px auto' }}>등록</Button>
           </form>

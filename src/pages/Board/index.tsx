@@ -21,6 +21,7 @@ const Board = () => {
   } = useSWR(API_GET_BOARD, get, {
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
+    dedupingInterval: 60 * 1000,
   });
 
   const onClickBoardInputToggle = useCallback(() => {
@@ -77,7 +78,15 @@ const Board = () => {
         <PrimaryBtn onClick={onClickBoardInputToggle}>글쓰기</PrimaryBtn>
       </BoardInputContainer>
       {boards?.map((b: any) => (
-        <BoardChild key={b.id} title={b.title} author={b.author} body={b.content} totalComments={b.totalComments} createdAt={b.createdAt} />
+        <BoardChild
+          key={b.id}
+          id={b.id}
+          title={b.title}
+          author={b.author}
+          body={b.content}
+          totalComments={b.totalComments}
+          createdAt={b.createdAt}
+        />
       ))}
     </div>
   );
